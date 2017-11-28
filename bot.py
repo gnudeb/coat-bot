@@ -37,9 +37,6 @@ def command(pass_args=False):
         return wrapper
     return decorator
 
-@command(pass_args=True)
-def test(chat_id, reply, db_session, args):
-    reply(str(db_session.query(Users).all()))
 
 def notify_user(bot, job):
     chat_id = job.context["chat_id"]
@@ -65,69 +62,36 @@ for user in active_users:
 
 local_session.close()
 
-
-def start(bot, update):
-    session = Session()
-    print("start")
-    chat_id = update.message.chat_id
-    bot.send_message(
-            chat_id=chat_id,
-            text="Hi, I am weather tracking bot!")
-    if not session.query(Users).filter_by(id=chat_id).first():
+@command()
+def start(chat_id, reply, db_session):
+    reply("Hi, I am weather tracking bot!")
+    if not db_session.query(Users).filter_by(id=chat_id).first():
         user = Users(id=chat_id)
-        session.add(user)
-        session.commit()
-        bot.send_message(
-                chat_id=chat_id,
-                text="You are all set! You can check /status now")
+        db_session.add(user)
+        reply("You are all set! You can check /status now")
 
-    session.close()
 
-start_handler = CommandHandler("start", start)
-updater.dispatcher.add_handler(start_handler)
-
-def status(bot, update):
-    session = Session()
-    print("status")
-    chat_id = update.message.chat_id
-    user = session.query(Users).filter_by(id=chat_id).first()
+@command()
+def status(chat_id, reply, db_session):
+    user = db_session.query(Users).filter_by(id=chat_id).first()
     text = "{} {} {} {}".format(
             user.id,
             user.city,
             user.time,
             user.active)
 
-    bot.send_message(
-            chat_id=chat_id,
-            text=text)
+    reply(text)
 
-    session.close()
 
-status_handler = CommandHandler("status", status)
-updater.dispatcher.add_handler(status_handler)
-
-def set_city(bot, update, args):
-    session = Session()
-    
-    chat_id = update.message.chat_id
-    user = session.query(Users).filter_by(id=chat_id).first()
+@command(pass_args=True)
+def set_city(chat_id, reply, db_session, args):
+    user = db_session.query(Users).filter_by(id=chat_id).first()
     user.city = args[0]
-    session.commit()
-    status(bot, update)
 
-    session.close()
-
-set_city_handler = CommandHandler("set_city", set_city, pass_args=True)
-updater.dispatcher.add_handler(set_city_handler)
-
-def set_time(bot, update, args):
-    session = Session()
-    
-    chat_id = update.message.chat_id
-    user = session.query(Users).filter_by(id=chat_id).first()
+@command(pass_args=True)
+def set_time(chat_id, reply, db_session, args):
+    user = db_session.query(Users).filter_by(id=chat_id).first()
     user.time = args[0]
-    session.commit()
-    status(bot, update)
     # updating a user dedicated job
     print("Updating a job for user {}".format(user.id))
     jobs = updater.job_queue.jobs()
@@ -145,37 +109,18 @@ def set_time(bot, update, args):
             context=user_job.context,
             name=user_job.name)
 
-    session.close()
 
-set_time_handler = CommandHandler("set_time", set_time, pass_args=True)
-updater.dispatcher.add_handler(set_time_handler)
-
-def suspend(bot, update):
-    session = Session()
-    
-    chat_id = update.message.chat_id
-    user = session.query(Users).filter_by(id=chat_id).first()
+@command()
+def suspend(chat_id, reply, db_session):
+    user = db_session.query(Users).filter_by(id=chat_id).first()
     user.active = False
-    session.commit()
-    status(bot, update)
 
-    session.close()
 
-suspend_handler = CommandHandler("suspend", suspend)
-updater.dispatcher.add_handler(suspend_handler)
-
-def restart(bot, update):
-    session = Session()
-    
-    chat_id = update.message.chat_id
-    user = session.query(Users).filter_by(id=chat_id).first()
+@command()
+def restart(chat_id, reply, db_session):
+    user = db_session.query(Users).filter_by(id=chat_id).first()
     user.active = True
-    session.commit()
-    status(bot, update)
 
-    session.close()
 
-restart_handler = CommandHandler("restart", restart)
-updater.dispatcher.add_handler(restart_handler)
 
 updater.start_polling()

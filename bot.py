@@ -15,8 +15,8 @@ print(datetime.datetime.now())
 
 updater = Updater(tg_bot_token)
 
-def update_jobs_state(updater, user):
-    jobs = updater.job_queue.jobs()
+def update_jobs_state(job_queue, user):
+    jobs = job_queue.jobs()
     job_name = str(user.id)
     user_job = next(filter(lambda j: j.name==job_name and j.enabled==True, jobs), None)
     
@@ -26,7 +26,7 @@ def update_jobs_state(updater, user):
     if user.active:
         hour, second = map(int, user.time.split(":"))
         time = datetime.time(hour, second)
-        updater.job_queue.run_daily(
+        job_queue.run_daily(
                 callback=notify_user,
                 time=time,
                 context={"chat_id": user.id},
@@ -40,7 +40,8 @@ def command(pass_args=False):
             def reply(text):
                 bot.send_message(chat_id=chat_id, text=text)
             db_session = Session()
-            func(chat_id, reply, db_session, **args)
+            user = db_session.query(Users).filter_by(id=chat_id).first()
+            func(user, reply, db_session, **args)
             db_session.commit()
             db_session.close()
 
@@ -80,17 +81,16 @@ for user in active_users:
 local_session.close()
 
 @command()
-def start(chat_id, reply, db_session):
+def start(user, reply, db_session):
     reply("Hi, I am weather tracking bot!")
-    if not db_session.query(Users).filter_by(id=chat_id).first():
+    if not user:
         user = Users(id=chat_id)
         db_session.add(user)
         reply("You are all set! You can check /status now")
 
 
 @command()
-def status(chat_id, reply, db_session):
-    user = db_session.query(Users).filter_by(id=chat_id).first()
+def status(user, reply, db_session):
     text = "{} {} {} {}".format(
             user.id,
             user.city,
@@ -101,29 +101,24 @@ def status(chat_id, reply, db_session):
 
 
 @command(pass_args=True)
-def set_city(chat_id, reply, db_session, args):
-    user = db_session.query(Users).filter_by(id=chat_id).first()
+def set_city(user, reply, db_session, args):
     user.city = args[0]
 
 @command(pass_args=True)
-def set_time(chat_id, reply, db_session, args):
-    user = db_session.query(Users).filter_by(id=chat_id).first()
+def set_time(user, reply, db_session, args):
     user.time = args[0]
-    # updating a user dedicated job
-    update_jobs_state(updater, user)
+    update_jobs_state(updater.job_queue, user)
 
 @command()
-def suspend(chat_id, reply, db_session):
-    user = db_session.query(Users).filter_by(id=chat_id).first()
+def suspend(user, reply, db_session):
     user.active = False
-    update_jobs_state(updater, user)
+    update_jobs_state(updater.job_queue, user)
 
 
 @command()
-def restart(chat_id, reply, db_session):
-    user = db_session.query(Users).filter_by(id=chat_id).first()
+def restart(user, reply, db_session):
     user.active = True
-    update_jobs_state(updater, user)
+    update_jobs_state(updater.job_queue, user)
 
 
 

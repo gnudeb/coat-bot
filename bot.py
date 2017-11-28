@@ -15,6 +15,23 @@ print(datetime.datetime.now())
 
 updater = Updater(tg_bot_token)
 
+def update_jobs_state(updater, user):
+    jobs = updater.job_queue.jobs()
+    job_name = str(user.id)
+    user_job = next(filter(lambda j: j.name==job_name and j.enabled==True, jobs), None)
+    
+    if user_job:
+        user_job.schedule_removal()
+    
+    if user.active:
+        hour, second = map(int, user.time.split(":"))
+        time = datetime.time(hour, second)
+        updater.job_queue.run_daily(
+                callback=notify_user,
+                time=time,
+                context={"chat_id": user.id},
+                name=job_name)
+
 def command(pass_args=False):
     def decorator(func):
         @wraps(func)
@@ -93,33 +110,20 @@ def set_time(chat_id, reply, db_session, args):
     user = db_session.query(Users).filter_by(id=chat_id).first()
     user.time = args[0]
     # updating a user dedicated job
-    print("Updating a job for user {}".format(user.id))
-    jobs = updater.job_queue.jobs()
-    job_name = str(user.id)
-    user_job = next(filter(lambda j: j.name==job_name and j.enabled, jobs))
-    user_job.schedule_removal()
-    print("Jobs after removal: {}".format(updater.job_queue.jobs()))
-
-    hour, second = map(int, args[0].split(":"))
-    new_time = datetime.time(hour, second)
-
-    updater.job_queue.run_daily(
-            callback=user_job.callback,
-            time=new_time,
-            context=user_job.context,
-            name=user_job.name)
-
+    update_jobs_state(updater, user)
 
 @command()
 def suspend(chat_id, reply, db_session):
     user = db_session.query(Users).filter_by(id=chat_id).first()
     user.active = False
+    update_jobs_state(updater, user)
 
 
 @command()
 def restart(chat_id, reply, db_session):
     user = db_session.query(Users).filter_by(id=chat_id).first()
     user.active = True
+    update_jobs_state(updater, user)
 
 
 

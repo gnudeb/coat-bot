@@ -41,7 +41,12 @@ def command(pass_args=False):
                 bot.send_message(chat_id=chat_id, text=text)
             db_session = Session()
             user = db_session.query(Users).filter_by(id=chat_id).first()
-            func(user, reply, db_session, **args)
+            context = {
+                    "user": user,
+                    "chat_id": chat_id,
+                    "db_session": db_session,
+                    "reply": reply}
+            func(**context, **args)
             db_session.commit()
             db_session.close()
 
@@ -81,16 +86,17 @@ for user in active_users:
 local_session.close()
 
 @command()
-def start(user, reply, db_session):
+def start(user, chat_id, db_session, reply):
     reply("Hi, I am weather tracking bot!")
     if not user:
+        print("not user")
         user = Users(id=chat_id)
         db_session.add(user)
         reply("You are all set! You can check /status now")
 
 
 @command()
-def status(user, reply, db_session):
+def status(user, chat_id, db_session, reply):
     text = "{} {} {} {}".format(
             user.id,
             user.city,
@@ -101,24 +107,34 @@ def status(user, reply, db_session):
 
 
 @command(pass_args=True)
-def set_city(user, reply, db_session, args):
+def set_city(user, chat_id, db_session, reply, args):
     user.city = args[0]
 
 @command(pass_args=True)
-def set_time(user, reply, db_session, args):
+def set_time(user, chat_id, db_session, reply, args):
     user.time = args[0]
     update_jobs_state(updater.job_queue, user)
 
 @command()
-def suspend(user, reply, db_session):
+def suspend(user, chat_id, db_session, reply):
     user.active = False
     update_jobs_state(updater.job_queue, user)
 
 
 @command()
-def restart(user, reply, db_session):
+def restart(user, chat_id, db_session, reply):
     user.active = True
     update_jobs_state(updater.job_queue, user)
+
+@command()
+def help(user, chat_id, db_session, reply):
+    reply(
+            "/start\n"
+            "/status\n"
+            "/set_city <city>\n"
+            "/set_time <hh:mm>\n"
+            "/suspend\n"
+            "/restart")
 
 
 

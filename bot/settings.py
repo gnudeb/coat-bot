@@ -18,4 +18,5 @@ from . import middleware
 MIDDLEWARE = [
     middleware.inject_db_session,
     middleware.autoregister_new_user,
+    middleware.inject_user,
 ]

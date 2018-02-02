@@ -23,8 +23,7 @@ indicating that you are in a virtual environment:
 `$ pip3 install -r requirements.txt`
 5. Add a json file with your Telegram bot token
 in project root directory named `private.json`:  
-```
-
+```json
 {
     "TELEGRAM_TOKEN": "<your token here>"
 }

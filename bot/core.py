@@ -2,15 +2,14 @@
 import re
 from telepot import Bot as BaseBot
 from telepot.loop import MessageLoop
-from .settings import TELEGRAM_TOKEN
+from .settings import TELEGRAM_TOKEN, MIDDLEWARE
 from .paths import paths
-from .middleware import inject_db_session
 
 class Bot(BaseBot):
     def __init__(self):
         super().__init__(TELEGRAM_TOKEN)
         self.paths = paths
-        self.middleware = [inject_db_session]
+        self.middleware = MIDDLEWARE
 
     def handle_message(self, request):
         text = request.get('text')

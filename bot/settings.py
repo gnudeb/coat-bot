@@ -13,3 +13,9 @@ with open(PRIVATE_FILE_PATH, 'r') as f:
 
 DATABASE_PATH = os.path.join(BASE_DIR, 'tg.db')
 DATABASE_URI = 'sqlite:///' + DATABASE_PATH
+
+from . import middleware
+MIDDLEWARE = [
+    middleware.inject_db_session,
+    middleware.autoregister_new_user,
+]

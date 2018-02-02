@@ -1,30 +1,12 @@
-#!/usr/bin/env python3
-import os
-from sqlalchemy import create_engine, Column, Integer, String, Boolean
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy_utils import database_exists, create_database
+from .settings import DATABASE_URI
 
-self_path = os.path.dirname(os.path.realpath(__file__))
-full_db_path = os.path.join(self_path, "tg.db")
+if not database_exists(DATABASE_URI):
+    create_database(DATABASE_URI)
 
-engine = create_engine("sqlite:///" + full_db_path)
-
+engine = create_engine(DATABASE_URI)
 Session = sessionmaker(bind=engine)
 Base = declarative_base(engine)
-
-class Users(Base):
-    __tablename__ = "Users"
-
-    id = Column(Integer, primary_key=True)
-    city = Column(String, default="Kyiv")
-    time = Column(String, default="07:00")
-    active = Column(Boolean, default=True)
-
-    def __str__(self):
-        return "<User: id={}>".format(self.id)
-
-
-if __name__ == "__main__" and not os.path.isfile(full_db_path):
-    Base.metadata.create_all(engine)
-    
-

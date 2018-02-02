@@ -1,7 +1,8 @@
 from .misc import Response
-
+from .models import User
 
 def ping(request):
+    print(request['db'].query(User).first())
     return Response('pong')
 
 def unrecognized(request):

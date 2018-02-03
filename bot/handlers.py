@@ -26,3 +26,23 @@ def status(request):
     )
 
     return Response(response_text)
+
+def activate(request):
+    if not request.user.active:
+        request.user.active = True
+        request.db.commit()
+        response_text = "Bot activated!"
+    else:
+        response_text = "Bot is already active"
+
+    return Response(response_text)
+
+def deactivate(request):
+    if request.user.active:
+        request.user.active = False
+        request.db.commit()
+        response_text = "Bot deactivated!"
+    else:
+        response_text = "Bot is already deactivated"
+
+    return Response(response_text)

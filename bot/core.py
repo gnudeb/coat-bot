@@ -4,6 +4,7 @@ from telepot import Bot as BaseBot
 from telepot.loop import MessageLoop
 from .settings import TELEGRAM_TOKEN, MIDDLEWARE
 from .paths import paths
+from .misc import Request
 
 class Bot(BaseBot):
     def __init__(self):
@@ -11,12 +12,13 @@ class Bot(BaseBot):
         self.paths = paths
         self.middleware = MIDDLEWARE
 
-    def handle_message(self, request):
-        text = request.get('text')
-        chat_id = request['from']['id']
+    def handle_message(self, meta):
+        text = meta.get('text')
+        chat_id = meta['from']['id']
         for path in self.paths:
             match = re.match(path.re_path, text)
             if match:
+                request = Request(meta)
                 self.apply_middleware(request)
                 response = path.handler(request, **match.groupdict())
                 if response.text:

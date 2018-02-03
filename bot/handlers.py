@@ -8,4 +8,4 @@ def unrecognized(request):
     return Response("Sorry, I don't recognize this command")
 
 def me(request):
-    return Response("{0}".format(request['user'].id))
+    return Response("{0}".format(request.user.id))

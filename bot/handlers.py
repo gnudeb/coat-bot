@@ -1,5 +1,7 @@
-from .misc import Response
-from .models import User
+from .misc import Response, Handler
+
+class PingHandler(Handler):
+    response_template = "pong"
 
 
 def ping(request):

@@ -29,4 +29,4 @@ in the project root directory named `private.json`:
 }
 ```
 5. Run bot:  
-`$ python3 manage.py`
+`$ python3 manage.py runserver`

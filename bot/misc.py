@@ -5,16 +5,19 @@ Path = namedtuple('Path', ['re_path', 'handler'])
 class Handler:
     response_template = ""
 
+    def __init__(self):
+        self.context = {}
+
     @classmethod
     def as_f(cls):
         def handler(request, **kwargs):
-            context = cls.generate_context(request)
-            return Response(cls.response_template.format(**context))
+            self = cls()
+            self.handle(request)
+            return Response(cls.response_template.format(**self.context))
         return handler
 
-    @classmethod
-    def generate_context(cls, request):
-        return {}
+    def handle(self, request):
+        self.context = {}
 
 
 class Request:

@@ -10,9 +10,8 @@ class StatusHandler(Handler):
         "Notification time: {time}\n"
         "Bot active: {active}")
 
-    @classmethod
-    def generate_context(cls, request):
-        return {
+    def handle(self, request):
+        self.context = {
             'location': request.user.location or "Not set",
             'time': request.user.notification_time or "Not set",
             'active': request.user.active,

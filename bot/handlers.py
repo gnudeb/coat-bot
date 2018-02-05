@@ -4,8 +4,19 @@ class PingHandler(Handler):
     response_template = "pong"
 
 
-def ping(request):
-    return Response('pong')
+class StatusHandler(Handler):
+    response_template = (
+        "Location: {location}\n"
+        "Notification time: {time}\n"
+        "Bot active: {active}")
+
+    @classmethod
+    def generate_context(cls, request):
+        return {
+            'location': request.user.location or "Not set",
+            'time': request.user.notification_time or "Not set",
+            'active': request.user.active,
+        }
 
 
 def unrecognized(request):
@@ -14,24 +25,6 @@ def unrecognized(request):
 
 def me(request):
     return Response("{0}".format(request.user.id))
-
-
-def status(request):
-    location = request.user.location or "Not set"
-    time = request.user.notification_time or "Not set"
-    active = request.user.active
-
-    response_text = (
-        "Location: {location}\n"
-        "Notification time: {time}\n"
-        "Bot active: {active}"
-    ).format(
-        location=location,
-        time=time,
-        active=active,
-    )
-
-    return Response(response_text)
 
 
 def activate(request):

@@ -12,8 +12,4 @@ def autoregister_new_user(request):
         db.commit()
 
 def inject_user(request):
-    db = Session()
-    user = db.query(User).get(request.chat_id)
-    db.expunge(user)
-    request.db.add(user)
-    request.user = user
+    request.user = request.db.query(User).get(request.chat_id)
